@@ -67,6 +67,9 @@ for _pair in _env("DESC_BY_CITY").split(","):
 # No meaningful default is possible, so fall back to "60 days out" -- set
 # VISA_CUTOFF to your real target date.
 CUTOFF = _env("CUTOFF") or (dt.date.today() + dt.timedelta(days=60)).isoformat()
+# Optional earliest qualifying date (inclusive, ISO yyyy-mm-dd).
+_from = _env("FROM")
+FROM_DATE = dt.date.fromisoformat(_from) if _from else None
 # "官方紧急申请 - 不是普通号" rows are emergency-only slots (not bookable by regular
 # applicants). Excluded by default; set VISA_INCLUDE_EMERGENCY=1 to include them.
 INCLUDE_EMERGENCY = _env("INCLUDE_EMERGENCY").strip().lower() in ("1", "true", "yes", "on")
@@ -317,7 +320,7 @@ def find_matches(data: dict, today: dt.date, cutoff: dt.date) -> list[dict]:
                     d = parse_cn_date(chip, today)
                 except ValueError:
                     continue
-                if d <= cutoff:
+                if d <= cutoff and (FROM_DATE is None or d >= FROM_DATE):
                     hits.append(d.isoformat())
             if hits:
                 matches.append({"city": city, "badge": row["badge"], "desc": row["desc"],
